@@ -1,3 +1,8 @@
+# Composer dependencies
+vendor/
+# Composer .lock file
+composer.lock
+
 # Numerous always-ignore extensions
 *.diff
 *.err

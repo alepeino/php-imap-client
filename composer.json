@@ -92,5 +92,8 @@
   "autoload": {
     "psr-4": {
         "SSilence\\ImapClient\\": "src/ImapClient/" }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^5.7"
   }
 }
