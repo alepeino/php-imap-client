@@ -12,60 +12,24 @@
 
 namespace SSilence\ImapClient;
 
+use SSilence\ImapClient\Connection\Connector;
+
 /**
- * Class ImapClient is helper class for imap access
+ * Class ImapClient
  *
- * @package    protocols
+ * @package    SSilence\ImapClient
  * @copyright  Copyright (c) Tobias Zeising (http://www.aditu.de)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
 class ImapClient
 {
-    /**
-     * Use the Secure Socket Layer to encrypt the session
-     */
-    const ENCRYPT_SSL = 'ssl';
+    const FOLDER_INBOX = 'INBOX';
 
     /**
-     * Force use of start-TLS to encrypt the session, and reject connection to servers that do not support it
+     * @var \SSilence\ImapClient\Connection\Connector
      */
-    const ENCRYPT_TLS = 'tls';
-    const CONNECT_ADVANCED = 'connectAdvanced';
-    const CONNECT_DEFAULT = 'connectDefault';
+    private $connector;
 
-    /**
-     * Connect status or advanced or default
-     *
-     * @var string
-     */
-    public static $connect;
-
-    /**
-     * Config for advanced connect
-     *
-     * @var array
-     */
-    public static $connectConfig;
-
-    /**
-     * Incoming message
-     *
-     * @var IncomingMessage
-     */
-    public $incomingMessage;
-
-    /**
-     * Imap connection
-     *
-     * @var resource ImapConnect
-     */
-    protected $imap;
-
-    /**
-     * Mailbox url
-     *
-     * @var string
-     */
     protected $mailbox = "";
 
     /**
@@ -73,17 +37,14 @@ class ImapClient
      *
      * @var string
      */
-    protected $folder = "INBOX";
+    private $currentFolder = self::FOLDER_INBOX;
 
     /**
-     * Initialize imap helper
+     * Create new ImapClient from a given Connector
      *
-     * @param string $mailbox
-     * @param string $username
-     * @param string $password
-     * @param string $encryption use ImapClient::ENCRYPT_SSL or ImapClient::ENCRYPT_TLS
+     * @param \SSilence\ImapClient\Connection\Connector $connector
      */
-    public function __construct($mailbox = null, $username = null, $password = null, $encryption = null)
+    public function __construct(Connector $connector)
     {
         if(isset($mailbox) && is_string($mailbox)){
             $this->setConnectDefault();
@@ -99,37 +60,6 @@ class ImapClient
         if(self::$connect === self::CONNECT_ADVANCED){
             $this->connectAdvanced(self::$connectConfig);
         };
-    }
-
-    /**
-     * Set connection to advanced
-     *
-     * @return void
-     */
-    public static function setConnectAdvanced()
-    {
-        static::$connect = self::CONNECT_ADVANCED;
-    }
-
-    /**
-     * Set connection to default
-     *
-     * @return void
-     */
-    public static function setConnectDefault()
-    {
-        static::$connect = self::CONNECT_DEFAULT;
-    }
-
-    /**
-     * Set connection config
-     *
-     * @param array $config
-     * @return void
-     */
-    public static function setConnectConfig(array $config)
-    {
-        static::$connectConfig = $config;
     }
 
     /**
@@ -327,7 +257,7 @@ class ImapClient
     {
         $result = imap_reopen($this->imap, $this->mailbox . $folder);
         if ($result === true) {
-            $this->folder = $folder;
+            $this->currentFolder = $folder;
         }
         return $result;
     }
@@ -796,7 +726,7 @@ class ImapClient
     public function purge()
     {
         // delete trash and spam
-        if ($this->folder==$this->getTrash() || strtolower($this->folder)=="spam") {
+        if ($this->currentFolder==$this->getTrash() || strtolower($this->currentFolder)=="spam") {
             if (imap_delete($this->imap,'1:*') === false) {
                 return false;
             }
@@ -838,7 +768,7 @@ class ImapClient
             $options['mark'] = 'SEEN';
         };
 
-        $saveCurrentFolder = $this->folder;
+        $saveCurrentFolder = $this->currentFolder;
         $emails = array();
         foreach($this->getFolders($options['getFolders']['separator'], $options['getFolders']['type']) as $folder) {
             $this->selectFolder($folder);
@@ -875,7 +805,7 @@ class ImapClient
         if(!isset($options['mark'])){
             $options['mark'] = 'SEEN';
         };
-        $saveCurrentFolder = $this->folder;
+        $saveCurrentFolder = $this->currentFolder;
         $this->selectFolder($folder);
         $emails = array();
         /**

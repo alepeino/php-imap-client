@@ -91,10 +91,12 @@
     },
     "autoload": {
         "psr-4": {
-            "SSilence\\ImapClient\\": "src/ImapClient/"
+            "SSilence\\ImapClient\\": "src/ImapClient/",
+            "SSilence\\ImapClient\\Tests\\": "tests/ImapClient/"
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^5.7"
+        "phpunit/phpunit": "^5.7",
+        "symfony/var-dumper": "^3.2"
     }
 }
